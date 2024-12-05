@@ -1,0 +1,414 @@
+{
+	"info": {
+		"_postman_id": "ab0c5067-8e71-4cc9-85d2-8bcf1d25d946",
+		"name": "Pet CRUD Operations",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12249341",
+		"_collection_link": "https://red-shuttle-77268.postman.co/workspace/3a379bfb-5317-449e-a5d2-8ff5ee3d1a2e/collection/12249341-ab0c5067-8e71-4cc9-85d2-8bcf1d25d946?action=share&source=collection_link&creator=12249341"
+	},
+	"item": [
+		{
+			"name": "Add Pet to the Store",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Генерація імені тваринки\r",
+							"\r",
+							"const currentDate = new Date();\r",
+							"const petName = `PetName_${currentDate.toISOString()}`;\r",
+							"pm.environment.set(\"petName\", petName);\r",
+							"\r",
+							"// Список статусів\r",
+							"const statuses = [\"available\", \"pending\", \"sold\"];\r",
+							"\r",
+							"// Вибір випадкового статусу\r",
+							"const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];\r",
+							"pm.environment.set(\"petStatus\", randomStatus);\r",
+							"\r",
+							"const randomId = Math.floor(Math.random() * 100000000) + 1;\r",
+							"pm.environment.set(\"RandomId\", randomId);\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Verify response status is 200 on creating a pet\", function () {\r",
+							"    pm.response.to.have.status(200); // Проверка успешного кода ответа\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Pet ID is present in response\", function () {\r",
+							"    pm.expect(response).to.have.property(\"id\");\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Pet name in the response matches the name in the request\", function () {\r",
+							"    pm.expect(response.name).to.eql(pm.environment.get(\"petName\")); // Проверка имени питомца в ответе сервера\r",
+							"});\r",
+							"\r",
+							"\r",
+							"pm.test(\"Pet status in the response matches the status in the request\", function () {\r",
+							"    pm.expect(response.status).to.eql(pm.environment.get(\"petStatus\"));\r",
+							"});\r",
+							"\r",
+							"//_____________________________________________________________________________\r",
+							"pm.environment.set(\"petId\", response.id);// Сохраняем ID в переменную окружения\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n \"id\": {{RandomId}},\r\n  \"name\": \"{{petName}}\",\r\n  \"status\": \"{{petStatus}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/pet",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"pet"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check the pet is created",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Verify response status is 200 on getting a pet\", function () { // Перевірка успішного коду відповіді\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Pet name matches to the one with which it was created\", function () {\r",
+							"    pm.expect(response.name).to.eql(pm.environment.get(\"petName\"));// Перевірка що у тваринки  ім'я відповідає заданому під час створення\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Pet status matches to the one with which it was created\", function () {\r",
+							"    pm.expect(response.status).to.eql(pm.environment.get(\"petStatus\"));// Перевірка що у тваринки статус відповідає заданому під час створення\r",
+							"}); \r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/pet/{{petId}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"pet",
+						"{{petId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Edit a pet",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.environment.set(\"petName\", pm.environment.get(\"petName\")+\"   EDITED\");//Додаю до змінної імені тваринки слово EDITED\r",
+							"\r",
+							"const statuses = [\"available\", \"pending\", \"sold\"];\r",
+							"\r",
+							"\r",
+							"\r",
+							"// Отримуємо значення поточного статусу, щоб виключити його потім зі списку і не змінити статус тварини на такий самий як був\r",
+							"const excludeStatus = pm.environment.get(\"petStatus\");\r",
+							"\r",
+							"// Виключаємо значення з масиву, створюю новий масив\r",
+							"const filteredStatuses = statuses.filter(status => status !== excludeStatus);\r",
+							"\r",
+							"// Вибираю випадкове значення з відфільтрованого масиву\r",
+							"const randomStatus = filteredStatuses[Math.floor(Math.random() * filteredStatuses.length)];\r",
+							"\r",
+							"\r",
+							"// Оновлюю змінну Статуса тваринки на той на який редагуватиму (будь-який інший статус відмінний від поточного)\r",
+							"pm.environment.set(\"petStatus\", randomStatus);\r",
+							"\r",
+							"\r",
+							"console.log(\"Виключений статус:\", excludeStatus);\r",
+							"console.log(\"Статуси серед яких буде рандом:\", filteredStatuses);\r",
+							"console.log(\"Випадковий вибраний статус:\", randomStatus);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();\r",
+							"\r",
+							"\r",
+							"pm.test(\"Verify response status is 200 on editing a pet\", function () {\r",
+							"    pm.response.to.have.status(200); \r",
+							"    // Перевірка успішного коду відповіді\r",
+							"});\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{host}}/pet/{{petId}}?name={{petName}}&status={{petStatus}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"pet",
+						"{{petId}}"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "{{petName}}"
+						},
+						{
+							"key": "status",
+							"value": "{{petStatus}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check the pet is edited",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"\r",
+							"const response = pm.response.json();\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);// Перевірка успішного коду відповіді\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Check that Pet is created with correct data\", function () {\r",
+							"// Перевірка двох полів, що їх значення відповідають заданим при редагуванны тваринки\r",
+							"    pm.expect(response.status).to.eql(pm.environment.get(\"petStatus\"));\r",
+							"    pm.expect(response.name).to.eql(pm.environment.get(\"petName\"));\r",
+							"\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
+				"url": {
+					"raw": "{{host}}/pet/{{petId}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"pet",
+						"{{petId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete a pet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200); // Перевірка успішного коду відповіді\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"packages": {},
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{host}}/pet/{{petId}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"pet",
+						"{{petId}}"
+					],
+					"query": [
+						{
+							"key": "petId",
+							"value": "9223372016900017566",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check the pet is deleted",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Проверка успешного ответа\r",
+							"\r",
+							"const response = pm.response.json();\r",
+							"pm.test(\"Status code is 404\", function () {\r",
+							"    pm.response.to.have.status(404);// Перевірка, що код відповіді 404,це і очікується так як ресурс був видалений\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Check the message about unfound pet is present\", function () {\r",
+							"    pm.expect(response.message).to.eql(pm.globals.get(\"messageTextIfPetIsNotExists\"));\r",
+							"\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/pet/{{petId}}",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"pet",
+						"{{petId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
